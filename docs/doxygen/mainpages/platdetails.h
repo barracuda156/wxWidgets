@@ -52,7 +52,7 @@ Use @c configure option @c \--with-gtk=2 to use GTK 2.
 
 wxOSX/Cocoa is the port of wxWidgets for the macOS platform. It requires
 a minimum SDK 10.11, Xcode 7.2.1 or greater (runs under 10.10.5 and higher),
-and supports x86_64 (but not i386) and ARM builds and deploying under 10.10.
+and fully supports amd64 as well ARM builds and deploying under 10.10.
 
 Note that Apple clang must be used to build wxOSX, due to the use of
 Apple-specific extensions ("blocks") in the macOS SDK headers, and hence the

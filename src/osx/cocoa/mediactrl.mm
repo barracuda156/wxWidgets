@@ -30,8 +30,10 @@
 #include "wx/osx/private.h"
 #include "wx/osx/private/available.h"
 
-#if wxOSX_USE_COCOA
+#if wxOSX_USE_COCOA && defined(__LP64__)
     #define wxOSX_USE_AVKIT 1
+#else
+    #define wxOSX_USE_AVKIT 0
 #endif
 
 //===========================================================================
