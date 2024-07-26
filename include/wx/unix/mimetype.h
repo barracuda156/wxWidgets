@@ -86,6 +86,7 @@ protected:
     // Load XDG globs files
     void LoadXDGGlobs(const wxString& filename);
 
+#ifndef __APPLE__
     // functions used to do associations
     virtual int AddToMimeData(const wxString& strType,
                       const wxString& strIcon,
@@ -98,6 +99,7 @@ protected:
                        wxMimeTypeCommands *entry,
                        const wxArrayString& strExtensions,
                        const wxString& strDesc);
+#endif
 
     virtual wxString GetIconFromMimeType(const wxString& mime);
 

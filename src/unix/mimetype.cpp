@@ -261,7 +261,9 @@ void wxMimeTypesManagerImpl::LoadXDGGlobs(const wxString& filename)
 
        wxString icon = GetIconFromMimeType(mime);
 
+#ifndef __APPLE__
        AddToMimeData(mime, icon, NULL, exts, wxEmptyString, true );
+#endif
     }
 }
 
@@ -716,6 +718,7 @@ wxString wxMimeTypesManagerImpl::GetIconFromMimeType(const wxString& WXUNUSED(mi
     return wxString();
 }
 
+#ifndef __APPLE__
 bool wxMimeTypesManagerImpl::DoAssociation(const wxString& strType,
                                            const wxString& strIcon,
                                            wxMimeTypeCommands *entry,
@@ -851,6 +854,7 @@ int wxMimeTypesManagerImpl::AddToMimeData(const wxString& strType,
 
     return nIndex;
 }
+#endif
 
 wxFileType * wxMimeTypesManagerImpl::GetFileTypeFromExtension(const wxString& ext)
 {
