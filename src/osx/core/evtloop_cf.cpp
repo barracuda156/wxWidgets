@@ -31,7 +31,10 @@
 
 #include "wx/scopedptr.h"
 
-#include "wx/osx/private.h"
+#include <CoreFoundation/CoreFoundation.h>
+#include <Carbon/Carbon.h>
+
+#include "wx/osx/core/cfstring.h"
 #include "wx/osx/core/cfref.h"
 #include "wx/thread.h"
 
@@ -118,7 +121,7 @@ wxCFEventLoop::DefaultModeObserverCallBack(CFRunLoopObserverRef WXUNUSED(observe
     if ( activity & kCFRunLoopBeforeTimers )
     {
     }
-    
+
     if ( activity & kCFRunLoopBeforeWaiting )
     {
     }
@@ -134,7 +137,7 @@ wxCFEventLoop::wxCFEventLoop()
 #if wxUSE_UIACTIONSIMULATOR
     m_shouldWaitForEvent = false;
 #endif
-    
+
     m_runLoop = CFGetCurrentRunLoop();
 
     CFRunLoopObserverContext ctxt;
