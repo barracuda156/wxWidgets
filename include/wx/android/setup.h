@@ -585,7 +585,7 @@
 //
 // Recommended setting: 1, can be set to 0 if wxUSE_WEBREQUEST_CURL==1,
 // otherwise wxWebRequest won't be available at all under Mac.
-#ifdef __APPLE__
+#ifdef __WXMAC__
 #define wxUSE_WEBREQUEST_URLSESSION wxUSE_WEBREQUEST
 #else
 #define wxUSE_WEBREQUEST_URLSESSION 0
@@ -597,7 +597,11 @@
 //
 // Recommended setting: 0 on Windows and macOS, otherwise 1 as it is required
 // for wxWebRequest to be available at all.
+#ifdef __WXMAC__
 #define wxUSE_WEBREQUEST_CURL 0
+#else
+#define wxUSE_WEBREQUEST_CURL 1
+#endif
 
 // wxProtocol and related classes: if you want to use either of wxFTP, wxHTTP
 // or wxURL you need to set this to 1.
