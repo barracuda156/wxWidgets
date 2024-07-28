@@ -20,7 +20,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-
 #if wxUSE_INTL
 
 #ifndef WX_PRECOMP
@@ -55,7 +54,7 @@
 
 #ifdef __WIN32__
     #include "wx/msw/private/uilocale.h"
-#elif defined(__WXOSX__)
+#elif defined(__APPLE__)
     #include "wx/osx/core/cfref.h"
     #include "wx/osx/core/cfstring.h"
     #include <CoreFoundation/CFLocale.h>
@@ -535,7 +534,7 @@ wxString wxLocale::GetSystemEncodingName()
     default:
         encname.Printf(wxS("windows-%u"), codepage);
     }
-#elif defined(__WXMAC__)
+#elif defined(__APPLE__)
     encname = wxCFStringRef::AsString(
         CFStringGetNameOfEncoding(CFStringGetSystemEncoding())
     );
@@ -818,7 +817,7 @@ wxString wxLocale::GetHeaderValue(const wxString& header,
 // accessors for locale-dependent data
 // ----------------------------------------------------------------------------
 
-#if defined(__WINDOWS__) || defined(__WXOSX__)
+#if defined(__WINDOWS__) || defined(__APPLE__)
 
 namespace
 {
@@ -1196,8 +1195,7 @@ wxString wxTranslateFromUnicodeFormat(const wxString& fmt)
     return fmtWX;
 }
 
-
-#endif // __WINDOWS__ || __WXOSX__
+#endif // __WINDOWS__ || __APPLE__
 
 wxString wxGetStdCLocaleInfo(wxLocaleInfo index, wxLocaleCategory WXUNUSED(cat))
 {
@@ -1325,7 +1323,7 @@ wxString wxLocale::GetInfo(wxLocaleInfo index, wxLocaleCategory cat)
     return wxGetInfoFromCFLocale(userLocaleRef, index, cat);
 }
 
-#else // !__WINDOWS__ && !__WXOSX__, assume generic POSIX
+#else // !__WINDOWS__ && !__APPLE__, assume generic POSIX
 
 #ifdef HAVE_LANGINFO_H
 
@@ -1481,8 +1479,6 @@ wxLocale *wxSetLocale(wxLocale *pLocale)
     g_pLocale = pLocale;
     return pOld;
 }
-
-
 
 // ----------------------------------------------------------------------------
 // wxLocale module (for lazy destruction of languagesDB)
