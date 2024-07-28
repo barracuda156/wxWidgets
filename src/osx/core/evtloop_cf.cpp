@@ -19,7 +19,6 @@
 // for compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-
 #include "wx/evtloop.h"
 
 #ifndef WX_PRECOMP
@@ -31,7 +30,10 @@
 
 #include "wx/scopedptr.h"
 
-#include "wx/osx/private.h"
+#include <CoreFoundation/CoreFoundation.h>
+#include <Carbon/Carbon.h>
+
+#include "wx/osx/core/cfstring.h"
 #include "wx/osx/core/cfref.h"
 #include "wx/thread.h"
 
