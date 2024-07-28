@@ -24,6 +24,8 @@
 #include "wx/osx/private.h"
 #include "wx/osx/private/available.h"
 
+#include <AppKit/AppKit.h>
+
 #if wxUSE_SOCKETS
 // global pointer which lives in the base library, set from the net one (see
 // sockosx.cpp) and used from the GUI code (see utilsexc_cf.cpp) -- ugly but
@@ -223,16 +225,15 @@ bool wxCocoaLaunch(const char* const* argv, pid_t &pid)
     }
 
     NSWorkspace *ws = [NSWorkspace sharedWorkspace];
-    
-    
+
     NSRunningApplication *app = nil;
-    
+
     if ( [params count] > 0 )
         app = [ws openURLs:params withApplicationAtURL:url
                    options:NSWorkspaceLaunchAsync
              configuration:[NSDictionary dictionary]
                      error:&error];
-    
+
     if ( app == nil )
     {
         app = [ws launchApplicationAtURL:url
@@ -252,15 +253,17 @@ bool wxCocoaLaunch(const char* const* argv, pid_t &pid)
             }
         }
     }
-    
+
     [params release];
 
     if( app != nil )
         pid = [app processIdentifier];
     else
     {
+#ifdef __WXMAC__
         wxString errorDesc = wxCFStringRef::AsString([error localizedDescription]);
         wxLogDebug( "wxCocoaLaunch failure: error is %s", errorDesc );
+#endif
         return false;
     }
     return true;
