@@ -16,8 +16,10 @@
 
 #if wxUSE_MIMETYPE
 
+#include <CoreFoundation/CoreFoundation.h>
+#include <Carbon/Carbon.h>
 #include "wx/osx/mimetype.h"
-#include "wx/osx/private.h"
+#include "wx/osx/core/cfstring.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // Helper functions
