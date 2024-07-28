@@ -64,11 +64,10 @@ public:
 
     static wxString AsString( CFStringRef ref ) ;
     static wxString AsStringWithNormalizationFormC( CFStringRef ref ) ;
-#ifdef __WXMAC__
+#ifdef __OBJC__
     static wxString AsString( WX_NSString ref ) ;
     static wxString AsStringWithNormalizationFormC( WX_NSString ref ) ;
-#endif
-#ifdef __OBJC__
+
     WX_NSString AsNSString() const { return (WX_OSX_BRIDGE WX_NSString)(CFStringRef) *this; }
 #endif
 private:
@@ -85,7 +84,7 @@ inline wxCFStringRef wxCFStringRefFromGet(CFStringRef p)
     return wxCFStringRef(wxCFRetain(p));
 }
 
-#ifdef __WXMAC__
+#ifdef __OBJC__
 /*! @function   wxCFStringRefFromGet
     @abstract   Factory function to create wxCFStringRefRef from a NSString* obtained from a Get-rule function
     @param  p           The NSString pointer to retain and create a wxCFStringRefRef from.  May be null.
@@ -96,6 +95,17 @@ inline wxCFStringRef wxCFStringRefFromGet(NSString *p)
 {
     return wxCFStringRefFromGet((WX_OSX_BRIDGE CFStringRef)p);
 }
+
+inline wxString wxCFStringRef::AsString( NSString* ref )
+{
+    return AsString( (CFStringRef) ref );
+}
+
+inline wxString wxCFStringRef::AsStringWithNormalizationFormC( NSString* ref )
+{
+    return AsStringWithNormalizationFormC( (CFStringRef) ref );
+}
+
 #endif
 
 #endif //__WXCFSTRINGHOLDER_H__
