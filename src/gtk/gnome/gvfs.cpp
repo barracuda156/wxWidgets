@@ -101,7 +101,6 @@ wxMimeTypesManagerImpl *wxGnomeVFSMimeTypesManagerFactory::CreateMimeTypesManage
     return new wxGnomeVFSMimeTypesManagerImpl;
 }
 
-
 //----------------------------------------------------------------------------
 // wxGnomeVFSMimeTypesManagerImpl
 //----------------------------------------------------------------------------
@@ -112,6 +111,9 @@ bool wxGnomeVFSMimeTypesManagerImpl::DoAssociation(const wxString& strType,
                        const wxArrayString& strExtensions,
                        const wxString& strDesc)
 {
+#ifdef __APPLE__
+    return true; // nothing to do here at the moment
+#else
     return AddToMimeData
            (
             strType,
@@ -121,6 +123,7 @@ bool wxGnomeVFSMimeTypesManagerImpl::DoAssociation(const wxString& strType,
             strDesc,
             true
            ) != wxNOT_FOUND;
+#endif
 }
 
 //----------------------------------------------------------------------------
