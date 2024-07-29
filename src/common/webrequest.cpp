@@ -32,7 +32,7 @@
 #if wxUSE_WEBREQUEST_WINHTTP
 #include "wx/msw/private/webrequest_winhttp.h"
 #endif
-#if wxUSE_WEBREQUEST_URLSESSION
+#if wxUSE_WEBREQUEST_URLSESSION && !defined(__APPLE__)
 #include "wx/osx/private/webrequest_urlsession.h"
 #endif
 #if wxUSE_WEBREQUEST_CURL
@@ -962,7 +962,7 @@ wxWebSession wxWebSession::New(const wxString& backendOrig)
         {
 #if wxUSE_WEBREQUEST_WINHTTP
             backend = wxWebSessionBackendWinHTTP;
-#elif wxUSE_WEBREQUEST_URLSESSION
+#elif wxUSE_WEBREQUEST_URLSESSION && !defined(__APPLE__)
             backend = wxWebSessionBackendURLSession;
 #elif wxUSE_WEBREQUEST_CURL
             backend = wxWebSessionBackendCURL;
@@ -999,7 +999,7 @@ void wxWebSession::InitFactoryMap()
 #if wxUSE_WEBREQUEST_WINHTTP
     RegisterFactory(wxWebSessionBackendWinHTTP, new wxWebSessionFactoryWinHTTP());
 #endif
-#if wxUSE_WEBREQUEST_URLSESSION
+#if wxUSE_WEBREQUEST_URLSESSION && !defined(__APPLE__)
     RegisterFactory(wxWebSessionBackendURLSession, new wxWebSessionFactoryURLSession());
 #endif
 #if wxUSE_WEBREQUEST_CURL

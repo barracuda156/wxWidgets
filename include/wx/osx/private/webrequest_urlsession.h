@@ -10,7 +10,7 @@
 #ifndef _WX_OSX_WEBREQUEST_URLSESSION_H
 #define _WX_OSX_WEBREQUEST_URLSESSION_H
 
-#if wxUSE_WEBREQUEST_URLSESSION
+#if wxUSE_WEBREQUEST_URLSESSION && !defined(__APPLE__)
 
 #include "wx/private/webrequest.h"
 
