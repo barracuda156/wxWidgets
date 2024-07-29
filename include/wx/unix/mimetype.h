@@ -98,9 +98,9 @@ protected:
                        wxMimeTypeCommands *entry,
                        const wxArrayString& strExtensions,
                        const wxString& strDesc);
-#endif
 
     virtual wxString GetIconFromMimeType(const wxString& mime);
+#endif
 
     // give it access to m_aXXX variables
     friend class WXDLLIMPEXP_FWD_BASE wxFileTypeImpl;

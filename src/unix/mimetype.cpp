@@ -258,9 +258,9 @@ void wxMimeTypesManagerImpl::LoadXDGGlobs(const wxString& filename)
        wxArrayString exts;
        exts.Add( ext );
 
+#ifndef __APPLE__
        wxString icon = GetIconFromMimeType(mime);
 
-#ifndef __APPLE__
        AddToMimeData(mime, icon, nullptr, exts, wxEmptyString, true );
 #endif
     }
@@ -712,12 +712,12 @@ wxFileType * wxMimeTypesManagerImpl::Associate(const wxFileTypeInfo& ftInfo)
     return GetFileTypeFromMimeType(strType);
 }
 
+#ifndef __APPLE__
 wxString wxMimeTypesManagerImpl::GetIconFromMimeType(const wxString& WXUNUSED(mime))
 {
     return wxString();
 }
 
-#ifndef __APPLE__
 bool wxMimeTypesManagerImpl::DoAssociation(const wxString& strType,
                                            const wxString& strIcon,
                                            wxMimeTypeCommands *entry,
@@ -1001,6 +1001,7 @@ void wxMimeTypesManagerImpl::AddMimeTypeInfo(const wxString& strMimeType,
                                              const wxString& strExtensions,
                                              const wxString& strDesc)
 {
+#ifndef __APPLE__
     // reading mailcap may find image/* , while
     // reading mime.types finds image/gif and no match is made
     // this means all the get functions don't work  fix this
@@ -1017,6 +1018,7 @@ void wxMimeTypesManagerImpl::AddMimeTypeInfo(const wxString& strMimeType,
     }
 
     AddToMimeData(strMimeType, strIcon, nullptr, sExts, strDesc, true);
+#endif
 }
 
 size_t wxMimeTypesManagerImpl::EnumAllFileTypes(wxArrayString& mimetypes)
