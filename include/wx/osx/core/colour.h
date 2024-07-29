@@ -86,10 +86,10 @@ public:
     wxColourRefData() = default;
     virtual ~wxColourRefData() = default;
 
-    virtual double Red() const = 0;
-    virtual double Green() const = 0;
-    virtual double Blue() const = 0;
-    virtual double Alpha() const = 0;
+    virtual CGFloat Red() const = 0;
+    virtual CGFloat Green() const = 0;
+    virtual CGFloat Blue() const = 0;
+    virtual CGFloat Alpha() const = 0;
 
     virtual bool IsSolid() const
         { return true; }
