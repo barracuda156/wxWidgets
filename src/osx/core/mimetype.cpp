@@ -423,14 +423,16 @@ void wxMimeTypesManagerImpl::LoadDisplayDataForUti(const wxString& uti)
     const static wxCFStringRef descKey( "CFBundleTypeName" );
     const static wxCFStringRef iconKey( "CFBundleTypeIconFile" );
 
-    wxCFStringRef cfuti(uti);
-
-    wxCFStringRef ext = UTTypeCopyPreferredTagWithClass( cfuti, kUTTagClassFilenameExtension );
+    // The call for finding the preferred application for a UTI is LSCopyDefaultRoleHandlerForContentType
+    // This returns an empty string on OS X 10.5
+    // Instead it is necessary to get the primary extension and use LSGetApplicationForInfo
+    wxCFStringRef ext = UTTypeCopyPreferredTagWithClass( wxCFStringRef( uti ), kUTTagClassFilenameExtension );
 
     // Look up the preferred application
-    wxCFRef<CFURLRef> appUrl = LSCopyDefaultApplicationURLForContentType( cfuti, kLSRolesAll, nullptr);
+    CFURLRef appUrl;
+    OSStatus status = LSGetApplicationForInfo( kLSUnknownType, kLSUnknownCreator, ext, kLSRolesAll, NULL, &appUrl );
 
-    if( !appUrl )
+    if( status != noErr )
         return;
 
     // Create a bundle object for that application
