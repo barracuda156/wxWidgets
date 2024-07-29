@@ -47,15 +47,15 @@ void wxBell()
 - (void)applicationWillFinishLaunching:(NSNotification *)application
 {
     wxUnusedVar(application);
-    
+
     // we must install our handlers later than setting the app delegate, because otherwise our handlers
     // get overwritten in the meantime
 
     NSAppleEventManager *appleEventManager = [NSAppleEventManager sharedAppleEventManager];
-    
+
     [appleEventManager setEventHandler:self andSelector:@selector(handleGetURLEvent:withReplyEvent:)
                          forEventClass:kInternetEventClass andEventID:kAEGetURL];
-    
+
     [appleEventManager setEventHandler:self andSelector:@selector(handleOpenAppEvent:withReplyEvent:)
                          forEventClass:kCoreEventClass andEventID:kAEOpenApplication];
 
@@ -110,7 +110,14 @@ void wxBell()
 
         if ( activate ) {
             if ( [NSApp activationPolicy] == NSApplicationActivationPolicyAccessory ) {
-                [[NSRunningApplication currentApplication] activateWithOptions: NSApplicationActivateIgnoringOtherApps];
+                if ( WX_IS_MACOS_AVAILABLE(10, 9) ) {
+                    [[NSRunningApplication currentApplication] activateWithOptions:
+                    (NSApplicationActivateAllWindows | NSApplicationActivateIgnoringOtherApps)];
+                }
+                else {
+                    [self deactivate];
+                    [self activateIgnoringOtherApps:YES];
+                }
             }
             else {
                 [NSApp activateIgnoringOtherApps: YES];

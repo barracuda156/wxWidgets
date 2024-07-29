@@ -37,31 +37,74 @@ bool UpdatePowerResourceUsage(wxPowerResourceKind kind, const wxString& reason)
         if( reason.IsEmpty())
             cfreason = wxString("User Activity");
 
-        if ( !g_processInfoActivity )
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+        if ( WX_IS_MACOS_AVAILABLE(10, 9) )
         {
-            NSActivityOptions
-                options = NSActivityUserInitiated |
-                          NSActivityIdleSystemSleepDisabled;
+            // Use NSProcessInfo for 10.9 and newer
+            if ( !g_processInfoActivity )
+            {
+                NSActivityOptions
+                    options = NSActivityUserInitiated |
+                              NSActivityIdleSystemSleepDisabled;
+
+                if ( kind == wxPOWER_RESOURCE_SCREEN )
+                    options |= NSActivityIdleDisplaySleepDisabled;
+
+                g_processInfoActivity = [[NSProcessInfo processInfo]
+                                         beginActivityWithOptions:options
+                                         reason:cfreason.AsNSString()];
+                [g_processInfoActivity retain];
+                return true;
+            }
+        }
+        else
+#endif
+        if ( !g_pmAssertionID )
+        {
+            CFStringRef assertType;
 
             if ( kind == wxPOWER_RESOURCE_SCREEN )
-                options |= NSActivityIdleDisplaySleepDisabled;
+                assertType = kIOPMAssertionTypeNoDisplaySleep;
+            else
+                assertType = kIOPMAssertionTypeNoIdleSleep;
 
-            g_processInfoActivity = [[NSProcessInfo processInfo]
-                                     beginActivityWithOptions:options
-                                     reason:cfreason.AsNSString()];
-            [g_processInfoActivity retain];
-            return true;
+            // Use power manager API for < 10.9 systems
+            IOReturn success = IOPMAssertionCreateWithName
+                               (
+                                    assertType,
+                                    kIOPMAssertionLevelOn,
+                                    cfreason,
+                                    &g_pmAssertionID
+                               );
+            if ( success == kIOReturnSuccess )
+                return true;
         }
     }
     else if ( g_powerResourceSystemRefCount == 0 )
     {
-        if ( g_processInfoActivity )
+        // Release power assertion
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+        if ( WX_IS_MACOS_AVAILABLE(10, 9) )
         {
-            [[NSProcessInfo processInfo]
-             endActivity:(id)g_processInfoActivity];
-            g_processInfoActivity = nil;
+            // Use NSProcessInfo for 10.9 and newer
+            if ( g_processInfoActivity )
+            {
+                [[NSProcessInfo processInfo]
+                 endActivity:(id)g_processInfoActivity];
+                g_processInfoActivity = nil;
 
-            return true;
+                return true;
+            }
+        }
+        else
+#endif
+        if ( g_pmAssertionID )
+        {
+            // Use power manager API for < 10.9 systems
+            IOReturn success = IOPMAssertionRelease(g_pmAssertionID);
+            g_pmAssertionID = 0;
+            if (success == kIOReturnSuccess)
+                return true;
         }
     }
 

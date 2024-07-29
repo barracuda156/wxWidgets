@@ -24,6 +24,11 @@
 #include "wx/osx/private.h"
 #include "wx/osx/private/available.h"
 
+#if (defined(__WXOSX_COCOA__) && MAC_OS_X_VERSION_MAX_ALLOWED >= 101000) \
+    || (defined(__WXOSX_IPHONE__) && defined(__IPHONE_8_0))
+    #define wxHAS_NSPROCESSINFO 1
+#endif
+
 #include <AppKit/AppKit.h>
 
 #if wxUSE_SOCKETS
@@ -38,28 +43,90 @@ wxSocketManager *wxOSXSocketManagerCF = nullptr;
 // our OS version is the same in non GUI and GUI cases
 wxOperatingSystemId wxGetOsVersion(int *verMaj, int *verMin, int *verMicro)
 {
-    NSOperatingSystemVersion osVer = [NSProcessInfo processInfo].operatingSystemVersion;
+#ifdef wxHAS_NSPROCESSINFO
+    // Note: we don't use WX_IS_MACOS_AVAILABLE() here because these properties
+    // are only officially supported since 10.10, but are actually available
+    // under 10.9 too, so we prefer to check for them explicitly and suppress
+    // the warnings that using without a __builtin_available() check around
+    // them generates.
+    wxCLANG_WARNING_SUPPRESS(unguarded-availability)
+
+    if ([NSProcessInfo instancesRespondToSelector:@selector(operatingSystemVersion)])
+    {
+        NSOperatingSystemVersion osVer = [NSProcessInfo processInfo].operatingSystemVersion;
+
+        if ( verMaj != NULL )
+            *verMaj = osVer.majorVersion;
+
+        if ( verMin != NULL )
+            *verMin = osVer.minorVersion;
+
+        if ( verMicro != NULL )
+            *verMicro = osVer.patchVersion;
+    }
+
+    wxCLANG_WARNING_RESTORE(unguarded-availability)
+
+    else
+#endif
+    {
+        // On OS X versions prior to 10.10 NSProcessInfo does not provide the OS version
+        // Deprecated Gestalt calls are required instead
+wxGCC_WARNING_SUPPRESS(deprecated-declarations)
+        SInt32 maj, min, micro;
+#ifdef __WXOSX_IPHONE__
+        maj = 7;
+        min = 0;
+        micro = 0;
+#else
+        Gestalt(gestaltSystemVersionMajor, &maj);
+        Gestalt(gestaltSystemVersionMinor, &min);
+        Gestalt(gestaltSystemVersionBugFix, &micro);
+#endif
+wxGCC_WARNING_RESTORE()
 
     if ( verMaj != nullptr )
-        *verMaj = osVer.majorVersion;
+        *verMaj = maj;
 
     if ( verMin != nullptr )
-        *verMin = osVer.minorVersion;
+        *verMin = min;
 
     if ( verMicro != nullptr )
-        *verMicro = osVer.patchVersion;
+        *verMicro = micro;
+    }
 
     return wxOS_MAC_OSX_DARWIN;
 }
 
 bool wxCheckOsVersion(int majorVsn, int minorVsn, int microVsn)
 {
-    NSOperatingSystemVersion osVer;
-    osVer.majorVersion = majorVsn;
-    osVer.minorVersion = minorVsn;
-    osVer.patchVersion = microVsn;
+#ifdef wxHAS_NSPROCESSINFO
+    // As above, this API is effectively available earlier than its
+    // availability attribute indicates, so check for it manually.
+    wxCLANG_WARNING_SUPPRESS(unguarded-availability)
 
-    return [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:osVer] != NO;
+    if ([NSProcessInfo instancesRespondToSelector:@selector(isOperatingSystemAtLeastVersion:)])
+    {
+        NSOperatingSystemVersion osVer;
+        osVer.majorVersion = majorVsn;
+        osVer.minorVersion = minorVsn;
+        osVer.patchVersion = microVsn;
+
+        return [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:osVer] != NO;
+    }
+
+    wxCLANG_WARNING_RESTORE(unguarded-availability)
+
+    else
+#endif
+    {
+        int majorCur, minorCur, microCur;
+        wxGetOsVersion(&majorCur, &minorCur, &microCur);
+
+        return majorCur > majorVsn
+            || (majorCur == majorVsn && minorCur >= minorVsn)
+            || (majorCur == majorVsn && minorCur == minorVsn && microCur >= microVsn);
+    }
 }
 
 wxString wxGetOsDescription()
@@ -184,57 +251,68 @@ bool wxCocoaLaunch(const char* const* argv, pid_t &pid)
 
     NSMutableArray *params = [[NSMutableArray alloc] init];
 
-    // Loop through command line arguments to the bundle,
-    // turn them into CFURLs and then put them in cfaFiles
-    // For use to launch services call
-    for( ; *argv != nullptr; ++argv )
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+    if (  WX_IS_MACOS_AVAILABLE(10, 10) )
     {
-        NSURL *cfurlCurrentFile;
-        wxString dir( *argv );
-        if( wxFileName::DirExists(dir) )
+        // Loop through command line arguments to the bundle,
+        // turn them into CFURLs and then put them in cfaFiles
+        // For use to launch services call
+        for( ; *argv != NULL; ++argv )
         {
-            // First, try creating as a directory
-            cfurlCurrentFile = [NSURL fileURLWithPath:wxCFStringRef(dir).AsNSString() isDirectory:YES];
-        }
-        else if( wxFileName::FileExists(dir) )
-        {
-            // And if it isn't a directory try creating it
-            // as a regular file
-            cfurlCurrentFile = [NSURL fileURLWithPath:wxCFStringRef(dir).AsNSString() isDirectory:NO];
-        }
-        else
-        {
-            // Argument did not refer to
-            // an entry in the local filesystem,
-            // so try creating it through CFURLCreateWithString
-            cfurlCurrentFile = [NSURL URLWithString:wxCFStringRef(dir).AsNSString()];
-        }
+            NSURL *cfurlCurrentFile;
+            wxString dir( *argv );
+            if( wxFileName::DirExists(dir) )
+            {
+                // First, try creating as a directory
+                cfurlCurrentFile = [NSURL fileURLWithPath:wxCFStringRef(dir).AsNSString() isDirectory:YES];
+            }
+            else if( wxFileName::FileExists(dir) )
+            {
+                // And if it isn't a directory try creating it
+                // as a regular file
+                cfurlCurrentFile = [NSURL fileURLWithPath:wxCFStringRef(dir).AsNSString() isDirectory:NO];
+            }
+            else
+            {
+                // Argument did not refer to
+                // an entry in the local filesystem,
+                // so try creating it through CFURLCreateWithString
+                cfurlCurrentFile = [NSURL URLWithString:wxCFStringRef(dir).AsNSString()];
+            }
 
-        // Continue in the loop if the CFURL could not be created
-        if(cfurlCurrentFile == nil)
-        {
-            wxLogDebug(
-                       wxT("wxCocoaLaunch Could not create NSURL for argument:%s"),
-                       *argv);
-            continue;
-        }
+            // Continue in the loop if the CFURL could not be created
+            if(cfurlCurrentFile == nil)
+            {
+                wxLogDebug(
+                           wxT("wxCocoaLaunch Could not create NSURL for argument:%s"),
+                           *argv);
+                continue;
+            }
 
-        // Add the valid CFURL to the argument array and then
-        // release it as the CFArray adds a ref count to it
-        [params addObject:cfurlCurrentFile];
-    }
+            // Add the valid CFURL to the argument array and then
+            // release it as the CFArray adds a ref count to it
+            [params addObject:cfurlCurrentFile];
+        }
+     }
+#endif
 
     NSWorkspace *ws = [NSWorkspace sharedWorkspace];
 
+
     NSRunningApplication *app = nil;
 
-    if ( [params count] > 0 )
-        app = [ws openURLs:params withApplicationAtURL:url
-                   options:NSWorkspaceLaunchAsync
-             configuration:[NSDictionary dictionary]
-                     error:&error];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+    if ( WX_IS_MACOS_AVAILABLE(10, 10) )
+    {
+        if ( [params count] > 0 )
+            app = [ws openURLs:params withApplicationAtURL:url
+                       options:NSWorkspaceLaunchAsync
+                 configuration:[NSDictionary dictionary]
+                         error:&error];
+    }
 
     if ( app == nil )
+#endif
     {
         app = [ws launchApplicationAtURL:url
                                  options:NSWorkspaceLaunchAsync

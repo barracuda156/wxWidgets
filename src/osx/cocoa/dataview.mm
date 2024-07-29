@@ -2977,11 +2977,19 @@ bool wxDataViewTextRenderer::MacRender()
             [par setLineBreakMode:[cell lineBreakMode]];
             // Tightening looks very ugly when combined with non-tightened rows,
             // so disabled it on OS X version where it's used:
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101100
             if ( WX_IS_MACOS_AVAILABLE(10, 11) )
+            {
                 [par setAllowsDefaultTighteningForTruncation:NO];
+            }
             else
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+            if ( WX_IS_MACOS_AVAILABLE(10, 10) )
+            {
                 [par setTighteningFactorForTruncation:0.0];
-
+            }
+#endif
             [str addAttribute:NSParagraphStyleAttributeName
                         value:par
                         range:NSMakeRange(0, [str length])];
