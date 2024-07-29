@@ -23,7 +23,7 @@
 class WXDLLIMPEXP_CORE wxGTKMimeTypesManagerImpl : public wxMimeTypesManagerImpl
 {
 protected:
-#if defined(__UNIX__)
+#if defined(__UNIX__) && !defined(__APPLE__)
     wxString GetIconFromMimeType(const wxString& mime) override;
 #endif
 };
