@@ -53,6 +53,9 @@ macro(wx_append_sources src_var source_base_name)
     if(DEFINED ${source_base_name}_HDR)
         wx_add_headers(${src_var} ${${source_base_name}_HDR})
     endif()
+    if(DEFINED ${source_base_name}_RSC)
+        wx_add_headers(${src_var} ${${source_base_name}_RSC})
+    endif()
 endmacro()
 
 # Add prefix to list of items
